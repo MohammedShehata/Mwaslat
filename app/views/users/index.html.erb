@@ -1,0 +1,26 @@
+<label class="span10 label"><h2>Users</h2></label>
+<table id="users_table" class="table table-bordered span10 well" >
+	<thead>
+		<tr>
+			<th>ID</th>
+			<th>Email</th>
+			<th>Administrator</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+		<% @users.each do |user| %>
+		<tr id=<%=user.id%> >
+			<td class="well"><%= user.id %></td>
+			<td class="well"><%= link_to user.email, user %></td>
+			<td class="well"><%= user.admin%></td>
+			<td class="well">
+				<%if (!user.admin?)%>
+					<%=link_to "Promote", "users/promote/#{user.id}", :class =>"btn btn-primary"%>
+				<%end%>
+			</td>
+		</tr>
+		<% end %>
+	</tbody>
+</table>
+<%= will_paginate @users%>

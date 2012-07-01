@@ -1,0 +1,40 @@
+<body onload="showRoute();">
+	<div id="map_canvas" class="well" style="width:100%; height:100%"></div>
+		<div class="container span9 well">
+	<table class ="table table-striped">
+		<% for i in 0..@route.sub_routes.length-1 %>
+			<% if @route.sub_routes[i].duration %>
+				<tr>
+					<td>Time to next stop </td>
+					<td><%= get_hours(@route.sub_routes[i].duration) %>  <%= get_minutes(@route.sub_routes[i].duration) %></td>
+				</tr>
+			<%end%>
+			<tr>
+				<td>Stop <%= i+1%> </td>
+				<td><%= @route.sub_routes[i].dest.name %></td>
+			</tr>
+		<% end %>
+		<tr>
+		 <td>Cost</td>
+		 <td><%= @route.cost %> LE</td>
+		</tr>
+		<tr>
+		 <td>Transportation Type</td>
+		 <td><%= @route.trans_category %></td>
+		</tr>
+		<tr>
+		 <td>Transportation way</td>
+		 <td><%= @route.trans_description %></td>
+		</tr>
+	</table>
+	<div class="form-actions">
+		<%= link_to "Cancel", :back ,:class =>'btn'  %>
+		<%= link_to "Edit", edit_route_path(@route) ,:class =>'btn'  %>
+	</div>
+	</div>
+	<% javascript_tag do %>
+		window.routeStops = <%= raw @route.sub_routes.to_json(:include => {
+		:dest => {:only =>[:path, :name]}
+		}, :only => {}) %>
+	<% end %>
+</body>

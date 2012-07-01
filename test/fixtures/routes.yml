@@ -1,0 +1,11 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+
+one:
+  cost: 9.99
+  transportation: 
+  user: 
+
+two:
+  cost: 9.99
+  transportation: 
+  user: 

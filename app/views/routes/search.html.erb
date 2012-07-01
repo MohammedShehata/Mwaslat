@@ -1,0 +1,101 @@
+<body onload="search()" style="height:90%;">
+	<div class="container-fluid" style="height: 100%;">
+		<div class="row-fluid" id="hasmap" style="height: 100%; " >
+			<div class="span6" >
+				<%= form_tag("/routes/search" ,:html => { :class => 'form-horizontal' }, :method => "get") do |f|%>
+				<fieldset>
+					<div class="control-group">
+						<label class="control-label" style="float:left;padding-right: 5%">Source District</label>
+						<div class="controls">
+							<input id="src" name="src" type="text" class="auto search-query text_field"/>
+						</div>
+					</div>
+					<div class="control-group">
+						<label class="control-label" style="float:left;padding-right: 1.3%">Destination District</label>
+						<div class="controls">
+							<input id="dest" name="dest" type="text" class="auto search-query text_field" />
+						</div>
+					</div>
+				</fieldset>
+				<div class="form-actions">
+					<%= submit_tag("Search",:class =>'btn btn-small btn-primary',:style =>'margin-left:45%;') %>
+				</div>
+				<% end %>
+
+				<%= notice %>
+				<%
+				 if(@routes != nil) 
+				 	row = -1
+ 					flags = @routes.pop
+ 					ids = 0
+				%>
+				<%= javascript_tag do %>
+				window.searchFlags = <%= flags %>
+				window.searchNodes = <%= raw @routes.to_json(
+          :include => {
+          :src => {:only => [:path, :name]} ,
+          :dest => {:only => [:path, :name]}
+          },
+          :only=>{} ) %>;
+				<% end %>
+				<% @routes.each do|sub_routes| %>
+				<table class="table table-striped" >
+					<thead>
+						<tr>
+							<th>Src</th>
+							<th>Dest</th>
+							<th>Cost</th>
+							<th>Time</th>
+							<th>Transportation</th>
+						</tr>
+					</thead>
+					<tbody>
+						<%
+						i = 0
+						while i < sub_routes.length
+							cost = sub_routes[i].route.cost
+							trans = sub_routes[i].route.trans_category
+							time = sub_routes[i].duration
+	
+							if flags[row + 1][i][0]
+								src = sub_routes[i].src.name
+							else
+								src = sub_routes[i - 1].dest.name
+							end
+	
+							while !flags[row + 1][i][1]
+								i += 1
+								time += sub_routes[i].duration
+							end
+							dest = sub_routes[i].dest.name
+							@route = sub_routes[i].route
+							i += 1
+						%>
+						<tr>
+							<td><%= src %></td>
+							<td><%= dest %></td>
+							<td><%= cost %></td>
+							<td><%= time %></td>
+							<td><%= trans %></td>
+							<td><%= render "likes/like_group", :id => "like_group_#{@route.id}" , :route => @route %></td>
+						</tr >
+						<% end %>
+				</table>
+				<button type="button" style="margin-left: 90% ;" class="btn btn-big btn-success" onclick="map.showRoute(<%= row += 1%>)" >
+					View
+				</button>
+				<hr />
+				<% end %>
+
+				</tbody>
+				</table>
+				<%end%>
+			</div>
+			<div class="span6" id="map_canvas" style="height: 100%" ></div>
+		</div>
+	</div>
+	<br />
+	<%= javascript_tag do %>
+		window.nodes = <%= raw Node.all.to_json(:only => [:name, :path, :id] ) %>;
+	<% end %>
+</body>

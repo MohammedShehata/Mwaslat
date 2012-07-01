@@ -1,0 +1,13 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+
+one:
+  src: 
+  dest: 
+  duration: 
+  route: 
+
+two:
+  src: 
+  dest: 
+  duration: 
+  route: 
