@@ -37,9 +37,9 @@
 				</div>
 				<div class="form-actions">
 					<%javascript_tag do%>
-					window.sub_route_element = <%= get_stop(f_route)%>;
+						window.sub_route_element = <%= get_stop(f_route)%>;
 					<%end%>
-					<%= f_route.submit(:class =>'btn btn-small btn-primary')  %>
+					<%= f_route.submit(:onclick => "fillPaths();",:class =>'btn btn-small btn-primary')  %>
 					<%= link_to "Cancel", :back, :class => "btn" %>
 				</div>
 				<%end%>
