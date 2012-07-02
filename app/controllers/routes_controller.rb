@@ -181,7 +181,7 @@ class RoutesController < ApplicationController
           notify_route(@route, "updated")
         end
         notify_nodes_users(notified_nodes, @route)
-        format.html { redirect_to(new_route_path, :notice => "Successfully Updated") }
+        format.html { redirect_to(routes_path, :notice => "Route successfully Updated") }
       else
         format.html { render :action => "new" }
       end
@@ -245,7 +245,7 @@ class RoutesController < ApplicationController
         if(current_user != @route.user)
           notify_route_enhancement(@route)
         end
-        format.html { redirect_to(new_route_path, :notice => "Successfully Updated") }
+        format.html { redirect_to(routes_path, :notice => "Route successfully Added") }
       else
         format.html { render :action => "new" }
       end
@@ -257,9 +257,10 @@ class RoutesController < ApplicationController
     if(current_user.admin?)
       notify_route(route, "deleted")
       route.destroy
+      redirect_to(routes_path, :notice => "Route successfully Deleted")
     elsif(current_user == route.user)
       route.destroy
-      redirect_to (:back)
+      redirect_to(routes_path, :notice => "Route successfully Deleted")
     else
       error_page
     end
