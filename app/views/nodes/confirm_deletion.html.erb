@@ -28,6 +28,13 @@
 			<%= link_to "Cancel", :back, :class => "btn" %>
 		</div>
 	</div>
+	<%
+		@routes.each do |route|
+     		route.order_sub_routes
+			route.sub_routes = route.sub_routes.unshift(SubRoute.new(:dest=> route.sub_routes[0].src))
+	 	end
+	%>
+	
 	<% javascript_tag do %>
 			window.routes = <%= raw @routes.to_json(:include => {:sub_routes => {
 				:include => {:dest => {:only => [:name, :path]}},

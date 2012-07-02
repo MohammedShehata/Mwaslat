@@ -38,25 +38,19 @@ function confirmRouteDeletion()
  */
 function showConfirmRouteDeletion(routeId)
 {
-    confirm(routeId);
-    // try
-    // {
-        // confirm(routeStops)
-    // }
-    // catch(err) 
-    // {
-        // confirm(err)
-    // }
     for(var i = 0; i < routes.length; i ++)
     {
         if(routes[i].route.id == routeId)
         {
-            routeStops = routes[i].route
+            routeStops = routes[i].route.sub_routes
             break
         }
     }
-    // confirm(routeStops.sub_routes[0].dest.name + " <<<<<<<<<<<");
-    // map.showingRoute(false);
+    for(var i = 0; i < routeStops.length; i ++)
+    {
+        routeStops[i].sub_route = routeStops[i]         
+    }
+     map.showingRoute(false); // nnot edit route
 }
 function showingNodes()
 {

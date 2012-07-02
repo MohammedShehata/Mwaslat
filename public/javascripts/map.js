@@ -699,6 +699,16 @@ function Map () {
 	 */
 	this.showingRoute = function(isEdit)
 	{
+	    if(overlays.length > 0)
+	    {
+            for(var i = 0; i < overlays.length; i ++)
+                overlays[i].del();
+            for(var i = 0; i < lines.length; i ++)
+                lines[i].setMap(null);
+            overlays = []
+            lines = []
+	    }
+	    
 	    var bounds = new google.maps.LatLngBounds();
 		for(var i = 0; i < routeStops.length; i ++)
 		{
