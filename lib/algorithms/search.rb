@@ -5,7 +5,7 @@ class Search
     total_pathes = Array.new
     visited = Hash.new
  
-    srcs.each do |src|
+    srcs.each do |src| 
       dsts.each do |dst|
         pathes = Array.new
         pathes[0] = Array.new
