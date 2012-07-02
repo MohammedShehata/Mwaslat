@@ -292,9 +292,8 @@ class RoutesController < ApplicationController
 
       search = Search.new
       routes = search.searches(@src, @dest)
-      # routes = [[SubRoute.find(3)], [SubRoute.find(1), SubRoute.find(2)]]
       comp = Compinations.new
-      @routes = comp.get_comp routes
+      @routes = comp.get_comp routes, @src
 
       respond_to do |format|
           format.html

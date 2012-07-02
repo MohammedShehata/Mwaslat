@@ -1,5 +1,8 @@
 class Compinations
-  def get_comp routes
+  def get_comp routes, src
+    
+    modify_dir routes, src
+    
     result = []
     flags = []
     parents = []
@@ -17,6 +20,20 @@ class Compinations
     result.push parents
     result.push flags
     return result
+  end
+  
+  def modify_dir routes, src
+    routes.each do |route|
+      sub_src = src
+      route.each do |sub|
+        if !sub_src.index(sub.src)    # swapping
+          temp = sub.src
+          sub.src = sub.dest
+          sub.dest = temp
+        end
+        sub_src = [sub.dest]
+      end
+    end
   end
   
   def get_flags c
