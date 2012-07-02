@@ -154,9 +154,32 @@ function remove_child(sub_route_index) {
 }
 
 function clear_name_field(sub_route_index) {
-	var node_name_id = "#" + template_2.replace(to_replace, sub_routes_ids[sub_route_index]).replace(".", "\\.") + "name";
-	$(node_name_id).val("");
-	$(node_name_id).removeAttr("disabled");
+	var node_id_template = "#" + template_2.replace(to_replace, sub_routes_ids[1]).replace(".", "\\.");
+	if(sub_route_index == 0){
+		var name = $(node_id_template + "name").val();
+		var path = $(node_id_template + "path").val();
+		var id = $(node_id_template + "id").val();
+		var node_id_template_1 = "#" + template_2.replace(to_replace, sub_routes_ids[0]).replace(".", "\\.");
+		if(name != ""){
+			$(node_id_template_1 + "name").val(name);
+			$(node_id_template_1 + "name").removeAttr("disabled");
+			if(id != ""){
+				$(node_id_template_1 + "name").attr("disabled", "disabled");
+				$(node_id_template_1 + "path").val(path);
+				$(node_id_template_1 + "id").val(id);
+			}
+		}
+		else{
+			$(node_id_template_1 + "name").val("");
+			$(node_id_template_1 + "name").removeAttr("disabled");
+			$(node_id_template_1 + "path").val("");
+			$(node_id_template_1 + "id").val("");
+		}
+	}
+	$(node_id_template + "name").val("");
+	$(node_id_template + "name").removeAttr("disabled");
+	$(node_id_template + "path").val("");
+	$(node_id_template + "id").val("");
 }
 
 // 0. 1. 2. 3. .....
