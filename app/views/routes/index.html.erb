@@ -1,8 +1,12 @@
 <div class="container-fluid" style="height: 100%;">
 	<div class="row-fluid" id="hasmap" style="height: 100%; " >
-		<p id="notice">
-			<%= notice %>
-		</p>
+		<%if(!notice.nil?)%>
+			<br/>
+			<div class="alert alert-info">
+			    <button class="close" data-dismiss="alert">×</button>
+			    <%= notice %>
+		    </div>
+		<%end%>
 		<%if current_user.admin?%>
 			<% id = "admin_routes_table"%>
 		<%else%>
@@ -37,7 +41,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				<%= render @routes, :confirm => false %>
+				<%= render @routes, :confirm => false, :enhance => false %>
 			</tbody>
 		</table>
 		<% if current_user.admin?%>

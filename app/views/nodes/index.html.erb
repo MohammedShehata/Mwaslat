@@ -8,9 +8,13 @@
 	<div class="container-fluid" style="height: 100%;">
 		<div class="row-fluid" id="hasmap" style="height: 100%; " >
 			<div class="span6" >
-				<p id="notice" >
-					<%= notice %>
-				</p>
+				<%if(!notice.nil?)%>
+					<br/>
+					<div class="alert alert-info">
+					    <button class="close" data-dismiss="alert">×</button>
+					    <%= notice %>
+				    </div>
+			    <%end%>
 		<label class="label label-info"><h2>All Nodes</h2></label>
 		<%if current_user.admin?%>
 			<div class="well form-vertical">
@@ -19,7 +23,7 @@
 					<%= f.label :name_like, "Name:" %>
 					<%= f.text_field :name_like, :class => "auto" %> <br/>
 					<%= f.label :category_like, "Category:" %>
-					<%= f.select :category_like, Node.all_categories %><br/>
+					<%= f.select :category_like, Node.all_categories, :include_blank => true %><br/>
 					<%= f.submit "Search" %>
 				<% end %>
 			</div>

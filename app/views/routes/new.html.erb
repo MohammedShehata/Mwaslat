@@ -3,9 +3,14 @@
 	<div class="container">
 		<div class="row">
 			<div class="span9">
-				<p>
-					<%= notice %>
-				</p>
+				<br/>
+				<%if(!notice.nil?)%>
+					<br/>
+					<div class="alert alert-info">
+					    <button class="close" data-dismiss="alert">×</button>
+					    <%= notice %>
+				    </div>
+			    <%end%>
 				<%= form_for @route , :html => { :class => 'well form-horizontal' } do |f_route| %>
 				<div id="sub_routes">
 					<%= f_route.fields_for :sub_routes , :html => { :class => 'form-horizontal' } do |f_sub_routes|%>
@@ -39,6 +44,7 @@
 				
 			 <div class="form-actions">				 	
 				<%= f_route.submit(:onclick => "fillPaths();",:class =>'btn btn-small btn-primary')  %>
+				<%= link_to "Cancel", :back, :class => "btn" %>
 			</div>
 				<br/>
 				<%javascript_tag do%>

@@ -3,13 +3,22 @@
 	<div class="container">
 		<div class="row">
 			<div class="span9">
-				<p>
-					<%= notice %>
-				</p>
-				<%= form_for @route , :html => { :class => 'well form-horizontal' } do |f_route| %>
+				<br/>
+				<div class="alert alert-info">
+				    <button class="close" data-dismiss="alert">×</button>
+				    <strong>Notice: </strong>You are not allowed to delete any of the route's stops
+			    </div>
+				<%if(!notice.nil?)%>
+					<br/>
+					<div class="alert alert-info">
+					    <button class="close" data-dismiss="alert">×</button>
+					    <%= notice %>
+				    </div>
+			    <%end%>
+				<%= form_for @route, "routes/apply_changes", :html => { :class => 'well form-horizontal' } do |f_route| %>
 				<div id="sub_routes">
 					<%= f_route.fields_for :sub_routes , :html => { :class => 'form-horizontal'} do |f_sub_routes|%>
-					<%= render "sub_route_fields", :f => f_sub_routes %>
+						<%= render "sub_route_fields", :f => f_sub_routes %>
 					<%end%>
 					<br/>
 				</div>
@@ -18,7 +27,7 @@
 						<div class="control-group">
 							<%= f_route.label :trans_category, "Transportation" ,:class =>'control-label'%>
 							<div class="controls">
-								<%= f_route.select :trans_category, ["Autobus", "Microbus", "Tram", "Train"], :disabled => true  %>
+							 <%= f_route.text_field :trans_category, :class =>'text_field', :disabled => true%>
 							</div>
 						</div>
 						<div class="control-group">
@@ -30,7 +39,7 @@
 						<div class="control-group">
 							<%= f_route.label :cost, "Cost",:class =>'control-label' %>
 							<div class="controls">
-								 <%= f_route.select :cost , Array.new(8) {|i| "#{(i+1)*0.25} LE"}, :selected => "#{@route.cost} LE" %>
+								 <%= f_route.text_field :cost, :value => "#{@route.cost} LE", :class =>'text_field', :disabled => true%>
 							</div>
 						</div>
 					</fieldset>

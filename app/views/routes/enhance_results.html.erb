@@ -1,4 +1,5 @@
-<table class="table table-striped table-bordered" >
+<label class="span11 label"><h2>Routes passing by "<%=@name%>"</h2></label>
+<table class="span11 table table-striped table-bordered" >
 	<thead>
 		<tr>
 			<th>Source</th>
@@ -14,6 +15,6 @@
 		</tr>
 	</thead>
 	<tbody>
-		<%= render @routes, :confirm => false %>
+		<%= render @routes, :confirm => false, :enhance => true %>
 	</tbody>
 </table>

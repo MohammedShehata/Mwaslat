@@ -28,7 +28,7 @@ class NodesController < ApplicationController
         end
         format.html { redirect_to(nodes_path, :notice => "Node Successfully added") }
       else
-        render :action => "new"
+        format.html { redirect_to(new_node_path, :notice => "Invalid data entry. Please be sure to draw a polygon on the map and provide it with a proper name and category.") }
       end
     end
   end
@@ -46,22 +46,25 @@ class NodesController < ApplicationController
     @node = Node.find(params[:id])
     authorize_node(@node)
     category_before = @node.category
-    @node.update_attributes(params[:node])
-    if(current_user.admin?)
-      notify_node(@node, "updated")
-    end
-    category_after = @node.category
-    if(category_before != category_after)
-      if(category_before == "District") # is a POI
-        @node.as_poi.destroy_all
-        @node.setParents()
-      elsif(category_after == "District") # is a District
-        @node.as_district.destroy_all
-        @node.setChildren()
-      end
-    end
     respond_to do |format|
-      format.html { redirect_to(nodes_path, :notice => "Successfully updated") }
+      if(@node.update_attributes(params[:node]))
+        if(current_user.admin?)
+          notify_node(@node, "updated")
+        end
+        category_after = @node.category
+        if(category_before != category_after)
+          if(category_before == "District") # is a POI
+            @node.as_poi.destroy_all
+            @node.setParents()
+          elsif(category_after == "District") # is a District
+            @node.as_district.destroy_all
+            @node.setChildren()
+          end
+        end
+        format.html { redirect_to(nodes_path, :notice => "Place successfully updated") }
+      else
+        format.html { redirect_to(edit_node_path(@node), :notice => "Invalid data entry. Name of a place can't be blank.") }
+      end
     end
   end
 
@@ -87,7 +90,7 @@ class NodesController < ApplicationController
         if(node_src_routes.empty? && node_dest_routes.empty?)
           notify_node(node, "deleted")
           node.destroy
-          redirect_to (:back), :notice => "Node successfully deleted"
+          redirect_to (:back), :notice => "Place was successfully deleted"
         else
           routes_ids = []
           node_src_routes.each do |sub_route|
@@ -130,7 +133,7 @@ class NodesController < ApplicationController
     node = Node.find(node_id)
     notify_node(node, "deleted")        # adds notification for deletion
     Node.destroy(node_id)
-    redirect_to :action => "index"
+    redirect_to(nodes_path, :notice => "This place and all it's refrencing routes were successfully deleted.")
   end
   
   #---------------------------  pool: 5---------------------------------
