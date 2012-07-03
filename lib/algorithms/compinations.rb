@@ -11,14 +11,16 @@ class Compinations
       comp = comp.first.product(*comp[1..-1])  # all the compinations
       
       comp.each do |c|
-        flags.push(get_flags(c))
-        parents.push c
-        result.push route
+        if !un_wanted c
+          flags.push(get_flags(c))
+          parents.push c
+          result.push route
+        end
       end
-      
     end
     result.push parents
     result.push flags
+    
     return result
   end
   
@@ -34,6 +36,26 @@ class Compinations
         sub_src = [sub.dest]
       end
     end
+  end
+    # prevent some one from leave a some route then take another then take the first again
+  def un_wanted comp
+    flag = false
+    i = 0
+    while i < comp.length and !flag
+      counter = 0
+      for j in (i + 1)..comp.length-1
+        if counter == 0
+          counter = 1 if comp[i] != comp[j]
+        else
+          if comp[i] == comp[j]
+            flag = true 
+            break
+          end
+        end
+      end
+      i += 1
+    end
+    return flag
   end
   
   def get_flags c
