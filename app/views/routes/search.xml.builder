@@ -1,5 +1,6 @@
 if @routes != nil
 	flags = @routes.pop
+	parents = @routes.pop
 	i = 0
 	xml.search do
 		@routes.each do |route|
@@ -35,9 +36,9 @@ if @routes != nil
 							end
 							xml.isStop flags[i][j][1]
 						end
-						xml.duration r.duration
-						xml.transportation r.route.trans_category
-						xml.cost r.route.cost
+						xml.duration parents[i][j].getMapping(r.id).duration
+						xml.transportation parents[i][j].trans_category
+						xml.cost parents[i][j].cost
 					end
 					j += 1
 				end

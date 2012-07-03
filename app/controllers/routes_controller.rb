@@ -309,7 +309,12 @@ class RoutesController < ApplicationController
         @src = get_poi_destricts(Node.where(:name => params[:src]))
         @dest = n.contained_districts p
       end
-      @routes = search_helper @src, @dest
+
+      search = Search.new
+      routes = search.searches(@src, @dest)
+      comp = Compinations.new
+      @routes = comp.get_comp routes, @src
+
       respond_to do |format|
           format.html
           if params[:key] == "1234"
@@ -317,25 +322,6 @@ class RoutesController < ApplicationController
           end
       end
     end
-  end
-  
-  def search_helper src, dest
-        search = Search.new
-        routes = search.searches(src, dest)
-        array = []
-        routes.each do |r|
-          arr = []
-          arr[0] = [true, true]
-          for j in 1..(r.length-1)
-            if r[j].route == r[j - 1].route
-              arr[j - 1][1] = false
-            end
-            arr[j] = [false, true]
-          end
-          array.push arr
-        end
-        routes.push array
-        return routes
   end
   
   def get_poi_destricts arr
