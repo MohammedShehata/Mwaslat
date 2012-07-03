@@ -190,15 +190,16 @@ class RoutesController < ApplicationController
 
   def enhance_route
     @route = Route.find(params[:id])
-    if(current_user == @route.user)
-      redirect_to edit_route_path(@route)
-    end
+    authorize_route(@route)
+    @route.set_sub_routes_durations
     @route.order_sub_routes
     @route.sub_routes = @route.sub_routes.unshift(SubRoute.new(:dest=> @route.sub_routes[0].src))
   end
   
   def apply_changes
     @route = Route.find(params[:id])
+    authorize_route(@route)
+    notified_nodes = []
     children = []
     children_params = params[:route]["sub_routes_attributes"]
     keys = children_params.keys
@@ -217,14 +218,14 @@ class RoutesController < ApplicationController
       dest_params = child_params["dest_attributes"]
       dest_id = dest_params["id"]
       if child_params["_destroy"] != "1"
-        child = SubRoute.find_or_initialize_by_id(child_id)
+        child = SubRoute.new
         if(dest_id == "")
           dest = Node.new(dest_params)
           dest.category = "District"
           dest.user = current_user
         else
           dest = Node.find(dest_id)
-          notified_nodes.push(dest) if (!@route.nodes.include?(dest))
+          notified_nodes.push(dest) if (dest.user != current_user && !@route.nodes.include?(dest))
         end
         child.dest = dest
         child.duration_hours = child_params["duration_hours"].split(" ")[0].to_i
@@ -233,19 +234,38 @@ class RoutesController < ApplicationController
         children.push(child)
       end
     end
+    params[:route].delete("sub_routes_attributes")
+    mappings = []
     for i in 1..children.length-1
       children[i].src = children[i-1].dest
-      children[i].save
+      if(children[i].src.id.nil? || children[i].dest.id.nil?)
+        children[i].save
+        mappings.push(Mapping.new(:route => @route, :sub_route => children[i], :duration => children[i].duration))
+      else
+        s = SubRoute.search(:src_id_eq => children[i].src.id, :dest_id_eq => children[i].dest.id).all
+        if(s.empty?)
+          children[i].save
+          mappings.push(Mapping.new(:route => @route, :sub_route => children[i], :duration => children[i].duration))
+        else
+          found_mapping = @route.getMapping(s[0].id)
+          if(found_mapping.nil?)
+            mappings.push(Mapping.new(:route => @route, :sub_route => s[0], :duration => children[i].duration))
+          else
+            found_mapping.update_attributes(:duration => children[i].duration)
+            mappings.push(found_mapping)
+          end
+        end
+      end
     end
-    children[0].destroy
     children = children.drop(1)    # removes first sub-route
-    @route.sub_routes = children
+    @route.mappings = mappings
     respond_to do |format|
       if @route.save
         if(current_user != @route.user)
           notify_route_enhancement(@route)
         end
-        format.html { redirect_to(routes_path, :notice => "Route successfully Added") }
+        notify_nodes_users(notified_nodes, @route)
+        format.html { redirect_to(routes_path, :notice => "Route successfully Updated") }
       else
         format.html { render :action => "new" }
       end
