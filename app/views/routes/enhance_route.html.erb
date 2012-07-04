@@ -15,7 +15,7 @@
 					    <%= notice %>
 				    </div>
 			    <%end%>
-				<%= form_for @route, "routes/apply_changes", :html => { :class => 'well form-horizontal' } do |f_route| %>
+				<%= form_for @route, :url => { :action => "apply_changes", :id => @route.id }, :html => { :class => 'well form-horizontal' } do |f_route| %>
 				<div id="sub_routes">
 					<%= f_route.fields_for :sub_routes , :html => { :class => 'form-horizontal'} do |f_sub_routes|%>
 						<%= render "sub_route_fields", :f => f_sub_routes %>

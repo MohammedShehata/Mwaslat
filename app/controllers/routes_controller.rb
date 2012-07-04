@@ -54,8 +54,9 @@ class RoutesController < ApplicationController
         child = SubRoute.new
         if(dest_id == "")
           dest = Node.new(dest_params)
-          if(dest.name = "" || dest.path == "")
+          if(dest.name == "" || dest.path == "")
             numOfStops = 0
+            puts "here"
             break
           end
           dest.category = "District"
@@ -75,38 +76,38 @@ class RoutesController < ApplicationController
     if(numOfStops < 2)
       redirect_to(:back, :notice => "Invalid Stops' Data. Please be sure to either select places from tha map or add a new polygon and provide each with a proper name")
     else
-    params[:route].delete("sub_routes_attributes")
-    @route = Route.new(params[:route])
-    mappings = []
-    for i in 1..children.length-1
-      children[i].src = children[i-1].dest
-      if(children[i].src.id.nil? || children[i].dest.id.nil?)
-        children[i].save
-        mappings.push(Mapping.new(:route => @route, :sub_route => children[i], :duration => children[i].duration))
-      else
-        s = SubRoute.search(:src_id_eq => children[i].src.id, :dest_id_eq => children[i].dest.id).all
-        if(s.empty?)
+      params[:route].delete("sub_routes_attributes")
+      @route = Route.new(params[:route])
+      mappings = []
+      for i in 1..children.length-1
+        children[i].src = children[i-1].dest
+        if(children[i].src.id.nil? || children[i].dest.id.nil?)
           children[i].save
           mappings.push(Mapping.new(:route => @route, :sub_route => children[i], :duration => children[i].duration))
         else
-          mappings.push(Mapping.new(:route => @route, :sub_route => s[0], :duration => children[i].duration))
+          s = SubRoute.search(:src_id_eq => children[i].src.id, :dest_id_eq => children[i].dest.id).all
+          if(s.empty?)
+            children[i].save
+            mappings.push(Mapping.new(:route => @route, :sub_route => children[i], :duration => children[i].duration))
+          else
+            mappings.push(Mapping.new(:route => @route, :sub_route => s[0], :duration => children[i].duration))
+          end
         end
       end
-    end
-    children = children.drop(1)    # removes first sub-route
-    created_districts.each do |district|
-      district.setChildren()
-    end
-    @route.mappings = mappings
-    @route.user = current_user
-    respond_to do |format|
-      if @route.save
-        notify_nodes_users(notified_nodes, @route)
-        format.html { redirect_to(routes_path, :notice => "Route successfully Added") }
-      else
-        format.html { render :action => "new" }
+      children = children.drop(1)    # removes first sub-route
+      created_districts.each do |district|
+        district.setChildren()
       end
-    end
+      @route.mappings = mappings
+      @route.user = current_user
+      respond_to do |format|
+        if @route.save
+          notify_nodes_users(notified_nodes, @route)
+          format.html { redirect_to(routes_path, :notice => "Route successfully Added") }
+        else
+          format.html { render :action => "new" }
+        end
+      end
     end
   end
   
@@ -147,7 +148,7 @@ class RoutesController < ApplicationController
         child = SubRoute.new
         if(dest_id == "")
           dest = Node.new(dest_params)
-          if(dest.name = "" || dest.path == "")
+          if(dest.name == "" || dest.path == "")
             numOfStops = 0
             break
           end
@@ -219,6 +220,7 @@ class RoutesController < ApplicationController
     @route = Route.find(params[:id])
     notified_nodes = []
     children = []
+    numOfStops = 0
     children_params = params[:route]["sub_routes_attributes"]
     keys = children_params.keys
     keys.collect! {|i| i.to_f}
@@ -237,8 +239,13 @@ class RoutesController < ApplicationController
       dest_id = dest_params["id"]
       if child_params["_destroy"] != "1"
         child = SubRoute.new
+        numOfStops += 1
         if(dest_id == "")
           dest = Node.new(dest_params)
+          if(dest.name == "" || dest.path == "")
+            numOfStops = 0
+            break
+          end
           dest.category = "District"
           dest.user = current_user
         else
@@ -252,40 +259,44 @@ class RoutesController < ApplicationController
         children.push(child)
       end
     end
-    params[:route].delete("sub_routes_attributes")
-    mappings = []
-    for i in 1..children.length-1
-      children[i].src = children[i-1].dest
-      if(children[i].src.id.nil? || children[i].dest.id.nil?)
-        children[i].save
-        mappings.push(Mapping.new(:route => @route, :sub_route => children[i], :duration => children[i].duration))
-      else
-        s = SubRoute.search(:src_id_eq => children[i].src.id, :dest_id_eq => children[i].dest.id).all
-        if(s.empty?)
+    if(numOfStops < 2)
+      redirect_to(:back, :notice => "Invalid Stops' Data. Please be sure to either select places from tha map or add a new polygon and provide each with a proper name")
+    else
+      params[:route].delete("sub_routes_attributes")
+      mappings = []
+      for i in 1..children.length-1
+        children[i].src = children[i-1].dest
+        if(children[i].src.id.nil? || children[i].dest.id.nil?)
           children[i].save
           mappings.push(Mapping.new(:route => @route, :sub_route => children[i], :duration => children[i].duration))
         else
-          found_mapping = @route.getMapping(s[0].id)
-          if(found_mapping.nil?)
-            mappings.push(Mapping.new(:route => @route, :sub_route => s[0], :duration => children[i].duration))
+          s = SubRoute.search(:src_id_eq => children[i].src.id, :dest_id_eq => children[i].dest.id).all
+          if(s.empty?)
+            children[i].save
+            mappings.push(Mapping.new(:route => @route, :sub_route => children[i], :duration => children[i].duration))
           else
-            found_mapping.update_attributes(:duration => children[i].duration)
-            mappings.push(found_mapping)
+            found_mapping = @route.getMapping(s[0].id)
+            if(found_mapping.nil?)
+              mappings.push(Mapping.new(:route => @route, :sub_route => s[0], :duration => children[i].duration))
+            else
+              found_mapping.update_attributes(:duration => children[i].duration)
+              mappings.push(found_mapping)
+            end
           end
         end
       end
-    end
-    children = children.drop(1)    # removes first sub-route
-    @route.mappings = mappings
-    respond_to do |format|
-      if @route.save
-        if(current_user != @route.user)
-          notify_route_enhancement(@route)
+      children = children.drop(1)    # removes first sub-route
+      @route.mappings = mappings
+      respond_to do |format|
+        if @route.save
+          if(current_user != @route.user)
+            notify_route_enhancement(@route)
+          end
+          notify_nodes_users(notified_nodes, @route)
+          format.html { redirect_to(routes_path, :notice => "You successfully enhanced a route") }
+        else
+          format.html { render :action => "new" }
         end
-        notify_nodes_users(notified_nodes, @route)
-        format.html { redirect_to(routes_path, :notice => "You successfully enhanced a route") }
-      else
-        format.html { render :action => "new" }
       end
     end
   end

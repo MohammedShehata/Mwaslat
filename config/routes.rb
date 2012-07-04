@@ -7,7 +7,7 @@ Mwaslat1::Application.routes.draw do
   match "routes/:id/enhance" => "routes#enhance_route"
   match "routes/enhance_results" => "routes#enhance_results"
   match "routes/search" => "routes#search"
-  match "routes/search/:id/edit" => "routes#update"
+  match "routes/apply_changes" => "routes#apply_changes"
   match "nodes/new" => "nodes#new"
   match "nodes/delete" => "nodes#destroy"
   match "users/promote/:id" => "users#promote"
