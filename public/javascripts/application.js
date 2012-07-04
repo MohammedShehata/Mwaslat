@@ -146,11 +146,11 @@ function remove_child(sub_route_index) {
 			sub_routes_ids.splice(sub_route_index, 1);
 		}
 	} else {
-		alert("Problem");
+		// alert("Problem");
 	}
 	rename_stops(sub_route_index);
-	alert(sub_routes_ids.toString());
-	alert(used_ids.toString());
+	// alert(sub_routes_ids.toString());
+	// alert(used_ids.toString());
 }
 
 function clear_name_field(sub_route_index) {
@@ -192,7 +192,7 @@ function add_child(sub_route_index) {
 	if(sub_route_index == 0) {// adds a new source stop
 		new_sub_route_id = get_new_id(0);
 		// (-1 + index)/2 => new source id
-		alert(new_sub_route_id);
+		// alert(new_sub_route_id);
 		show_time_fields(sub_routes_ids[0]);
 		// show the old source time fields
 		sub_route_before = $("#" + sub_routes_ids[0]);
@@ -212,12 +212,12 @@ function add_child(sub_route_index) {
 			sub_route_before.after(sub_route_instance.replace(regexp, new_sub_route_id));
 			sub_routes_ids.splice(sub_route_index, 0, new_sub_route_id);
 		} else {
-			alert("Problem");
+			// alert("Problem");
 		}
 	}
 	rename_stops(sub_route_index);
-	alert(sub_routes_ids.toString());
-	alert(used_ids.toString());
+	// alert(sub_routes_ids.toString());
+	// alert(used_ids.toString());
 }
 
 function rename_stops(start) {
