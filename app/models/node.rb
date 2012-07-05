@@ -96,7 +96,7 @@ class Node < ActiveRecord::Base
   def self.all_categories
     ["District", "Automotive", "Business", "Education", "Emergency", "Entertainment", "Food & Drink",
       "Government", "Lodging", "Public Services", "Shops", "Tourist Attraction",
-      "Travel", "Recreation", "Other"]
+      "Travel", "Recreation", "Other", "Train Station", "Tram Station"]
   end
 
   def self.getAllPois

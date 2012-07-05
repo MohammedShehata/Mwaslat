@@ -136,13 +136,14 @@ class RoutesController < ApplicationController
          i.to_s 
        end
     end
+    destroyed_mappings  = []
     for i in 0..keys.length-1
       child_params = children_params[keys[i]]
       child_id = child_params["id"]
       dest_params = child_params["dest_attributes"]
       dest_id = dest_params["id"]
       if child_params["_destroy"] == "1"
-        @route.getMapping(child_id.to_i).destroy() if child_id != ""
+        destroyed_mappings.push(@route.getMapping(child_id.to_i)) if child_id != ""
       else
         numOfStops += 1
         child = SubRoute.new
@@ -168,6 +169,9 @@ class RoutesController < ApplicationController
     if(numOfStops < 2)
       redirect_to(:back, :notice => "Invalid Stops' Data. Please be sure to either select places from tha map or add a new polygon and provide each with a proper name")
     else
+      destroyed_mappings.each do |mapping|
+        mapping.destroy
+      end
       params[:route].delete("sub_routes_attributes")
       @route.update_attributes(params[:route])
       mappings = []
@@ -367,7 +371,7 @@ class RoutesController < ApplicationController
   
   def enhance_results
     @name = params[:name]
-    @routes = Route.search(:sub_routes_src_name_or_sub_routes_dest_name_like => @name).all
+    @routes = Route.search(:sub_routes_src_name_or_sub_routes_dest_name_like => @name).group(:id).all
   end
   
   def data

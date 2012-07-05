@@ -6,6 +6,22 @@ var remove_counter = -10;
 var template_1 = "route_sub_routes_attributes_index_";
 var template_2 = "route_sub_routes_attributes_index_dest_attributes_";
 var to_replace = new RegExp("index", "g");
+var sub_route_element = "<div id='sub_route_index'>" + "<fieldset>" + "<div class='control-group'>" +
+"<label class='control-label' for='route_sub_routes_attributes_sub_route_index_duration'>Time to next stop</label>" + "<div class='controls'>" +
+"<select id='route_sub_routes_attributes_sub_route_index_duration_hours' name='route[sub_routes_attributes][sub_route_index][duration_hours]'>" +
+"<option value='0 hours' selected='selected'>0 hours</option>" + "<option value='1 hours'>1 hours</option>" +
+"<option value='2 hours'>2 hours</option>" + "<option value='3 hours'>3 hours</option></select> :" +
+"<select id='route_sub_routes_attributes_sub_route_index_duration_minutes' name='route[sub_routes_attributes][sub_route_index][duration_minutes]'>" +
+"<option value='0 minutes' selected='selected'>0 minutes</option>" +
+"<option value='10 minutes'>10 minutes</option>" + "<option value='20 minutes'>20 minutes</option>" +
+"<option value='30 minutes'>30 minutes</option>" + "<option value='40 minutes'>40 minutes</option>" +
+"<option value='50 minutes'>50 minutes</option></select>" + "</div>" + "</div>" + "<p>" + "<fieldset>" + "<div class='control-group'>" +
+"<label class='control-label' for='route_sub_routes_attributes_sub_route_index_dest_attributes_name'>Name</label>" + "<div class='controls'>" +
+"<input class='text_field' id='route_sub_routes_attributes_sub_route_index_dest_attributes_name' name='route[sub_routes_attributes][sub_route_index][dest_attributes][name]' size='30' type='text' />" + "</div>" + "</div>" +
+"<input id='route_sub_routes_attributes_sub_route_index_dest_attributes_path' name='route[sub_routes_attributes][sub_route_index][dest_attributes][path]' type='hidden' />" +
+"<input id='route_sub_routes_attributes_sub_route_index_dest_attributes_id' name='route[sub_routes_attributes][sub_route_index][dest_attributes][id]' type='hidden' />" +
+"</fieldset>" + "</p>" + "<input id='route_sub_routes_attributes_sub_route_index__destroy' name='route[sub_routes_attributes][sub_route_index][_destroy]' type='hidden' value='false' />" +
+"<input id='route_sub_routes_attributes_sub_route_index_id' name='route[sub_routes_attributes][sub_route_index][id]' type='hidden' />" + "</fieldset>" + "</div>";
 
 $(document).ready(function() {
 	$("#registerGuideData").hide();
@@ -78,12 +94,13 @@ $(document).ready(function() {
 	});
 
 });
+
 function show_category_description() {
 	var category = $("#node_category").val();
 	var description = $("#category_description");
 	switch(category) {
 		case "District":
-			description.html("ewqs");
+			description.html("other users can this place in their routes");
 			break;
 		case "Automotive":
 			description.html("e.g Parking, Repair service, Gas station");
@@ -92,7 +109,7 @@ function show_category_description() {
 			description.html("e.g Bank, ATM, Manufacturing business, Service business");
 			break;
 		case "Education":
-			description.html("ewqs");
+			description.html("e.g ");
 			break;
 		case "Emergency":
 			description.html("ewqs");
@@ -149,8 +166,6 @@ function remove_child(sub_route_index) {
 		// alert("Problem");
 	}
 	rename_stops(sub_route_index);
-	// alert(sub_routes_ids.toString());
-	// alert(used_ids.toString());
 }
 
 function clear_name_field(sub_route_index) {
@@ -191,24 +206,20 @@ function add_child(sub_route_index) {
 	var sub_route_before;
 	if(sub_route_index == 0) {// adds a new source stop
 		new_sub_route_id = get_new_id(0);
-		// (-1 + index)/2 => new source id
-		// alert(new_sub_route_id);
 		show_time_fields(sub_routes_ids[0]);
-		// show the old source time fields
-		sub_route_before = $("#" + sub_routes_ids[0]);
-		// old source element
+		sub_route_before = $(("#" + sub_routes_ids[0]).replace(".", "\\."));
 		sub_route_before.before(sub_route_instance.replace(regexp, new_sub_route_id));
 		sub_routes_ids.unshift(new_sub_route_id);
 		hide_time_fields(sub_routes_ids[0]);
 	} else {
 		if(sub_route_index == sub_routes_ids.length) {// adds a new destination stop
 			new_sub_route_id = get_dest_id();
-			sub_route_before = $("#" + sub_routes_ids[sub_route_index - 1]);
+			sub_route_before = $(("#" + sub_routes_ids[sub_route_index - 1]).replace(".", "\\."));
 			sub_route_before.after(sub_route_instance.replace(regexp, new_sub_route_id));
 			sub_routes_ids.push(new_sub_route_id);
 		} else if(sub_route_index < sub_routes_ids.length && (sub_route_index > 0)) {// adds a new intermediate stop
 			new_sub_route_id = get_new_id(sub_route_index);
-			sub_route_before = $("#" + sub_routes_ids[sub_route_index - 1]);
+			sub_route_before = $(("#" + sub_routes_ids[sub_route_index - 1]).replace(".", "\\."));
 			sub_route_before.after(sub_route_instance.replace(regexp, new_sub_route_id));
 			sub_routes_ids.splice(sub_route_index, 0, new_sub_route_id);
 		} else {
@@ -216,8 +227,6 @@ function add_child(sub_route_index) {
 		}
 	}
 	rename_stops(sub_route_index);
-	// alert(sub_routes_ids.toString());
-	// alert(used_ids.toString());
 }
 
 function rename_stops(start) {
