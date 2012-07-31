@@ -9,6 +9,7 @@ function Map () {
     
     var oldOverlays = [];       // the exists areas in our system 
     
+    var iconPath = "../img/icons/marker";    
 	/*
 	 * initailize google map and puts the map in DIV(#map_canvas)
 	 * adding some new properyties for "Map" obj. like
@@ -32,7 +33,8 @@ function Map () {
 			disableDefaultUI : true,
 			scaleControl: true,
 			zoomControl : true, 
-			mapTypeId: google.maps.MapTypeId.ROADMAP
+			mapTypeId: google.maps.MapTypeId.ROADMAP,
+			disableDoubleClickZoom: true
 	    };
 	    map = new google.maps.Map(document.getElementById('map_canvas'),
 	      myOptions);
@@ -42,7 +44,9 @@ function Map () {
 	 	google.maps.Polygon.prototype.tip = null;
 	 	google.maps.Polygon.prototype.title = null;
 	 	google.maps.Polygon.prototype.exist = null;
+	 	google.maps.Polygon.prototype.marker = null;
 	 	google.maps.Polygon.prototype.isSelected = false;
+	 	google.maps.Polygon.prototype.selectedBefore = false;
 	 	google.maps.Polygon.prototype.del = function()
 	 	{
     	    this.setMap(null);
@@ -55,14 +59,17 @@ function Map () {
                 this.strokeWeight = 1;
  			    this.setMap(map);
  			}
-     	    try{
+ 			if(this.tip)
+ 			{
     	 		this.tip.setMap(null);
-     	    }
-     	    catch(err){}
+                this.tip = null;		    
+ 			}
+	 		if(this.marker)
+	 		{
+                this.marker.setMap(null);
+                this.marker = null;
+	 		}
 	 	}
-	 	google.maps.Polygon.prototype.getNode = function(){
-			return this.getPath().getAt(0);
-		}
 		google.maps.Polygon.prototype.getPointString = function()
 	 	{
 	 		return google.maps.geometry.encoding.encodePath(this.getPath());	
@@ -94,9 +101,13 @@ function Map () {
  	 */
  	this.addDrawingManager = function()
 	{
-		google.maps.drawing.DrawingManager.prototype.on = function()
+		google.maps.drawing.DrawingManager.prototype.onPoly = function()
 		{
 			this.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
+		}
+		google.maps.drawing.DrawingManager.prototype.onMarker = function()
+		{
+		    this.setDrawingMode(google.maps.drawing.OverlayType.MARKER);
 		}
 		google.maps.drawing.DrawingManager.prototype.off = function()
 		{
@@ -105,7 +116,7 @@ function Map () {
 		drawingManager = new google.maps.drawing.DrawingManager(
 		{
 	  		drawingMode: null,
-	  		rawingModes:[google.maps.drawing.OverlayType.POLYGON ],
+	  		drawingModes:[google.maps.drawing.OverlayType.POLYGON],
 			drawingControl: false,
 	  		polygonOptions:
 	  		{
@@ -121,60 +132,52 @@ function Map () {
 	     * check if the adding in node mode or route node
 	     * adding some events for completed polygon
 	     */
-	    google.maps.event.addListener(drawingManager, "polygoncomplete", function(polygon)
+	    google.maps.event.addListener(drawingManager, "polygoncomplete", function(overlay)
 	    {
-	    	if(getAddPlace() == "Add Place")     // after pressing cancel button
-	    	{
-	    		polygon.setMap(null);
-				polygon = null;
-	    	}
-	    	else
-	    	{
-				overlayComplete(polygon);
-		    	setAddPlace("Add Place");
-				if(nodeMode)
-				{
-				    hidePlaceControl();
-				    overlays.push(polygon);
-				    drawingManager.off();
-				}
-				else
-				{
-    	    		polygon.exist = false;
-    				addTip(polygon, overlays.length + 1);
-    				google.maps.event.addListener(polygon.getPath() , "set_at", function(){
-    					polygon.tip.setMap(null);
-    					dragEvent(polygon);
-    					addTip(polygon, overlays.indexOf(polygon) + 1);
-    				});
-    		    	if(overlays.length < 2)     // note that overlays will increment after that
-    				{
-    					overlays.push(polygon);
-    					if(overlays.length == 2)
-    						drawLine(1, false);
-    				}
-    				else
-    				{
-    					matchNode = polygon;
-    					hidePlaceControl();
-    				}
-    				drawingManager.off();
-    		    	addMatchingEvent(polygon);
-				}
-	    	}
+	        if(addPlaceText() == "Add Place")     // after pressing cancel button
+            {
+                overlay.setMap(null);
+                overlay = null;
+            }
+            else
+            {
+                
+                overlayComplete(overlay);
+                setAddPlace("Add Place");
+                if(nodeMode)
+                {
+                    hidePlaceControl();
+                    overlays.push(overlay);
+                    drawingManager.off();
+                }
+                else
+                {
+                    overlay.exist = false;
+                    addTip(overlay, overlays.length + 1);
+                    if(overlays.length < 2)     // note that overlays will increment after that
+                        overlays.push(overlay);
+                    else
+                        matchNode = overlay;
+                    hidePlaceControl();
+                    drawingManager.off();
+                    addMatchingEvent(overlay);
+                    addMarkerStop(overlay);
+                }
+    	        
+            }
 	    });
 	}
 	/*
 	 * adding some events to remove the right click div  when click or right click on over the map
 	 */
-    function overlayComplete(polygon)
+    function overlayComplete(overlay)
 	{
-		google.maps.event.addListener(polygon, "rightclick", function(event){
+		google.maps.event.addListener(overlay, "rightclick", function(event){
 			if(map.rightClick != null)
 				map.rightClick.setMap(null);
-			rightClickDelete(event.latLng, polygon);
+			rightClickDelete(event.latLng, overlay);
 		});
-		google.maps.event.addListener(polygon, "click", function(event){
+		google.maps.event.addListener(overlay, "click", function(event){
 			if(map.rightClick != null)
 			{
 				map.rightClick.setMap(null);
@@ -182,6 +185,52 @@ function Map () {
 			}
 		});
 	}
+    function addMarkerStop(overlay)
+    {
+        overlay.infoWindow = new google.maps.InfoWindow(
+        {
+           content: "<b><u>double click</u> for determining the stop</b>",
+           position: overlay.getPath().getAt(0)
+        });
+        overlay.infoWindow.open(map);
+        if(!overlay.selectedBefore)
+        {
+            google.maps.event.addListener(overlay, "dblclick", function(event)
+            {
+                if((overlay.isSelected == overlay.selectedBefore) && overlay.marker == null)
+                {
+                    overlay.marker = new google.maps.Marker(
+                    {
+                        position: event.latLng,
+                        map: map,
+                        icon: !matchNode? iconPath + overlays.length + ".png" : iconPath + (overlays.length + 1) + ".png",
+                        animation: google.maps.Animation.DROP,
+                        title: "the stop",
+                        draggable: true
+                    });
+                    overlay.infoWindow.close();
+                    if(overlays.length <= 2  && matchNode == null)
+                        showPlaceControl();
+                    if(overlays.length == 2 && matchNode == null)
+                        drawLine(1, false);
+                }
+                // Some events for dragging the marker
+                google.maps.event.addListener(overlay.marker , "dragstart", function(){
+                    overlay.marker.lastState = overlay.marker.getPosition(); 
+                });
+                google.maps.event.addListener(overlay.marker , "dragend", function(){
+                    if(!google.maps.geometry.poly.containsLocation(overlay.marker.getPosition(), overlay))
+                    {
+                        overlay.marker.setPosition(overlay.marker.lastState);
+                        dragEvent(overlay);
+                    }
+                });
+                google.maps.event.addListener(overlay.marker , "drag", function(){
+                    dragEvent(overlay);
+                });
+            });
+        }
+    }
     /*
      * used to add "Add Place" button and its events
      */
@@ -190,10 +239,10 @@ function Map () {
 		addPlace = addControl("adding new place", "Add Place");
 		google.maps.event.addDomListener(addPlace, 'click', function()
 		{
-			if(getAddPlace() == "Add Place")
+			if(addPlaceText() == "Add Place")
 			{
 				setAddPlace("Cancel");
-				drawingManager.on();        // activate the drawing mode
+				drawingManager.onPoly();        // activate the drawing mode
 			}
 			else
 			{
@@ -227,7 +276,7 @@ function Map () {
 	/*
 	 * is used to get the text of the top right button
 	 */
-    function getAddPlace()
+    function addPlaceText()
 	{
 		return addPlace.firstChild.firstChild.innerHTML;
 	}
@@ -268,11 +317,13 @@ function Map () {
 	 * @param(index) is the index of the seconde overlay
 	 * @param(dragMod) is a boolean to check if it is a new line or existing line but dragged
 	 */
-    function drawLine(index, dragMode){
+    function drawLine(index, dragMode)
+    {
 		var path = [];
-		path.push(overlays[index].getNode());
-		path.push(overlays[index - 1].getNode());
-		var line = new google.maps.Polyline({
+		path.push(overlays[index].marker.getPosition());
+		path.push(overlays[index - 1].marker.getPosition());
+		var line = new google.maps.Polyline(
+        {
 			path : path,
 			strokeColor : "#0000FF",
 			strokeOpacity : 0.7,
@@ -296,7 +347,7 @@ function Map () {
     function dragEvent(overlay)
 	{
 		var index = overlays.indexOf(overlay);
-		if(index > 0) // left except the first overlay
+		if(index > 0 && lines.length > 0) // left except the first overlay
 		{
 			var line1 = lines[index - 1];
 			line1.setMap(null);
@@ -322,7 +373,7 @@ function Map () {
 	{
 		google.maps.event.addListener(overlay, "click", function()
 		{
-			if(matchNode != null)
+			if(matchNode && matchNode.marker)
 			{
 				var index = overlays.indexOf(overlay);
 				if(index == overlays.length - 1)
@@ -359,7 +410,7 @@ function Map () {
 	{
 		google.maps.event.addListener(line, "click", function()
 		{
-			if(matchNode != null)
+			if(matchNode && matchNode.marker)
 			{
 				var index = lines.indexOf(line);
 				overlays.splice(index + 1, 0, matchNode);
@@ -428,7 +479,7 @@ function Map () {
 		// clear lines
 		for(var i = 0; i < lines.length; i ++)
 		{
-			lines[i].setMap(null);			
+			lines[i].setMap(null);
 		}
 		lines = [];
 		// change icons and change lines
@@ -436,7 +487,7 @@ function Map () {
 		{
 			overlays[i].tip.setMap(null);
 			addTip(overlays[i], i + 1);
-			overlays[i].setMap(map);
+			overlays[i].marker.setIcon(iconPath + (i+1) + ".png");
 			if(i > 0)
 				drawLine(i, false);
 		}
@@ -452,7 +503,7 @@ function Map () {
 		div.style.position = "absolute";
 		
 		div.innerHTML = tip + " ";
-		overlay.tip = new CustomeOverlay(overlay.getNode(), div, false);
+		overlay.tip = new CustomeOverlay(overlay.getPath().getAt(0), div, false);
 	}
 	/*
 	 * add animated title for the overlay (is the name of existing node)
@@ -555,12 +606,11 @@ function Map () {
 		div.style.position = "absolute";
 		var button = createButton("Select");
 		button.onclick = function (){
-		    tip = 0
+		    var tip = 0
+		    hidePlaceControl();
 		    if(overlays.length < 2)
 		    {
                 overlays.push(overlay);
-		        if(overlays.length == 2)
-                    drawLine(1, false);
                 add_selected_node(overlay.name, overlay.getPointString(), overlay.id, overlays.length - 1, true);
                 
                 tip = overlays.length;
@@ -568,24 +618,25 @@ function Map () {
 		    else
 		    {
     			matchNode = overlay;
-    			hidePlaceControl();
     			drawingManager.off();
     			
     			tip = overlays.length + 1;
 		    }
 			addTip(overlay, tip);
-			addMatchingEvent(overlay);
-			
+			if(!overlay.selectedBefore)
+    			addMatchingEvent(overlay);
+			addMarkerStop(overlay);
 			// change the color of the selected node
-			// confirm("done1");
 			overlay.isSelected = true
+			overlay.selectedBefore = true;
 			overlay.setMap(null)
+			
             overlay.strokeColor = "#000000";
             overlay.fillColor = "#000000";
 			overlay.fillOpacity = 0.2;
             overlay.strokeWeight = 3;
 			overlay.setMap(map);
-			// confirm("done2")
+
 			map.rightClick.setMap(null);
 			map.rightClick = null;
 			map.highlight = null;
@@ -629,10 +680,11 @@ function Map () {
 	{
 		var button = document.createElement("Button");
 		button.innerHTML = text;
-		button.style.border = "0px";
+        button.style.border = "0px";
 		button.style.background = "white";
 		button.style.color = "blue";
 		button.style.fontWeight = "bolder";
+		button.style.paddingLeft = "3px";
 		button.onmouseout= function()
 		{
 			this.style.background = 'white'	
