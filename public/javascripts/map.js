@@ -9,7 +9,8 @@ function Map () {
     
     var oldOverlays = [];       // the exists areas in our system 
     
-    var iconPath = "../img/icons/marker";    
+    var iconPath = "../img/icons/marker";
+    var blankIcon = "../img/icons/blank.png";    
 	/*
 	 * initailize google map and puts the map in DIV(#map_canvas)
 	 * adding some new properyties for "Map" obj. like
@@ -74,6 +75,18 @@ function Map () {
 	 	{
 	 		return google.maps.geometry.encoding.encodePath(this.getPath());	
 	 	}
+        google.maps.Polygon.prototype.showStops = function()
+        {
+            if(this.stops)
+                for(var i = 0; i < this.stops.length; i ++)
+                    this.stops[i].setMap(map);
+        }
+        google.maps.Polygon.prototype.hideStops = function()
+        {
+            if(this.stops)
+                for(var i = 0; i < this.stops.length; i ++)
+                    this.stops[i].setMap(null);
+        }
 	}
 	/*
      * default mode is adding routes
@@ -189,7 +202,8 @@ function Map () {
     {
         overlay.infoWindow = new google.maps.InfoWindow(
         {
-           content: "<b><u>double click</u> for determining the stop</b>",
+           content: "<b><u>double click</u> for determining the stop</b>" 
+           + (overlay.stops ? "<b> or you can select an existing stop </b>" : "") ,
            position: overlay.getPath().getAt(0)
         });
         overlay.infoWindow.open(map);
@@ -208,27 +222,56 @@ function Map () {
                         title: "the stop",
                         draggable: true
                     });
-                    overlay.infoWindow.close();
-                    if(overlays.length <= 2  && matchNode == null)
-                        showPlaceControl();
-                    if(overlays.length == 2 && matchNode == null)
-                        drawLine(1, false);
+                    markerComplete();
                 }
-                // Some events for dragging the marker
-                google.maps.event.addListener(overlay.marker , "dragstart", function(){
+            });
+            function markerComplete()
+            {
+                overlay.hideStops();  // if it is selected node that have old stops
+                overlay.infoWindow.close();
+                if(overlays.length <= 2  && matchNode == null)
+                    showPlaceControl();
+                if(overlays.length == 2 && matchNode == null)
+                    drawLine(1, false);
+                                    // Some events for dragging the marker
+                google.maps.event.addListener(overlay.marker , "dragstart", function()
+                {
                     this.lastState = this.getPosition(); 
                 });
-                google.maps.event.addListener(overlay.marker , "dragend", function(){
+                google.maps.event.addListener(overlay.marker , "dragend", function()
+                {
                     if(!google.maps.geometry.poly.containsLocation(overlay.marker.getPosition(), overlay))
                     {
                         this.setPosition(this.lastState);
                         dragEvent(overlay);
                     }
                 });
-                google.maps.event.addListener(overlay.marker , "drag", function(){
+                google.maps.event.addListener(overlay.marker , "drag", function()
+                {
                     dragEvent(overlay);
                 });
-            });
+            }
+            if(overlay.stops)
+            {
+                for(var i = 0; i < overlay.stops.length; i ++)
+                {
+                    google.maps.event.addListener(overlay.stops[i] , "click", function()
+                    {
+                        if(!overlay.marker)
+                        {
+                            overlay.marker = this;
+                            markerComplete();
+                            this.setIcon(!matchNode? iconPath + overlays.length + ".png" : iconPath + (overlays.length + 1) + ".png");
+                            this.setDraggable(true);
+                            this.setMap(map);
+                            
+                            this.isSelected = true
+                            if(overlays.length <= 2)
+                                add_selected_stop(this.title, this.getPosition().lat(), this.getPosition().lng(), this.id, overlays.indexOf(overlay));
+                        }
+                    });                     
+                }
+            }
         }
     }
     /*
@@ -382,7 +425,12 @@ function Map () {
 					if(!matchNode.exist)
 					   add_child(index + 1);
 				    else
-				       add_selected_node(matchNode.name, matchNode.getPointString(), matchNode.id, index + 1, false); 	             
+				    {
+				        add_selected_node(matchNode.name, matchNode.getPointString(), matchNode.id, index + 1, false);
+                        if(matchNode.marker.isSelected)
+                            add_selected_stop(matchNode.marker.title, matchNode.marker.getPosition().lat(), 
+                                matchNode.marker.getPosition().lng(), matchNode.marker.id, index + 1);
+				    }
 				    matchNode = null;
                     showPlaceControl();
 				}
@@ -393,7 +441,12 @@ function Map () {
 					if(!matchNode.exist)
                        add_child(0);
                     else
-                       add_selected_node(matchNode.name, matchNode.getPointString(), matchNode.id, 0, false);
+                    {
+                        add_selected_node(matchNode.name, matchNode.getPointString(), matchNode.id, 0, false);
+                        if(matchNode.marker.isSelected)
+                            add_selected_stop(matchNode.marker.title, matchNode.marker.getPosition().lat(), 
+                                matchNode.marker.getPosition().lng(), matchNode.marker.id, 0);                        
+                    }
                     matchNode = null;
                     showPlaceControl();
 				}
@@ -418,7 +471,12 @@ function Map () {
 				if(!matchNode.exist)
 				    add_child(index + 1);
 				else
+				{
 				    add_selected_node(matchNode.name, matchNode.getPointString(), matchNode.id, index + 1, false);
+				    if(matchNode.marker.isSelected)
+                            add_selected_stop(matchNode.marker.title, matchNode.marker.getPosition().lat(), 
+                                matchNode.marker.getPosition().lng(), matchNode.marker.id, index + 1);
+				}
 				matchNode = null;
 				showPlaceControl();
 			}
@@ -604,7 +662,8 @@ function Map () {
 		var div = document.createElement("Div");
 		div.style.position = "absolute";
 		var button = createButton("Select");
-		button.onclick = function (){
+		button.onclick = function ()
+		{
 		    var tip = 0
 		    hidePlaceControl();
 		    if(overlays.length < 2)
@@ -625,7 +684,9 @@ function Map () {
 			if(!overlay.selectedBefore)
     			addMatchingEvent(overlay);
 			
+			// For stops (new and existing stops)
 			addMarkerStop(overlay);
+			overlay.showStops();
 			// change the color of the selected node
 			overlay.selectedBefore = true;
 			overlay.isSelected = true
@@ -818,6 +879,19 @@ function Map () {
                 fillOpacity: 0
 			});
 			poly.name = node.name;
+			
+		    poly.stops = []
+		    for(var j = 0; j < node.stops.length; j ++)
+		    {
+		        var marker = new google.maps.Marker({
+                    title: node.stops[j].name,
+                    position: new google.maps.LatLng(node.stops[j].lat, node.stops[j].lon),
+                    icon: blankIcon
+                });
+                marker.id = node.stops[j].id;
+		        poly.stops.push(marker)
+		    }
+			 
 			poly.id = node.id;
 			poly.exist = true;
 			poly.area = computeArea(poly.getPath());  // must be MVCArray
