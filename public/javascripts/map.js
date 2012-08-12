@@ -223,6 +223,24 @@ function Map () {
                         draggable: true
                     });
                     markerComplete();
+                    
+                    // Some events for dragging the marker
+                    google.maps.event.addListener(overlay.marker , "dragstart", function()
+                    {
+                        this.lastState = this.getPosition(); 
+                    });
+                    google.maps.event.addListener(overlay.marker , "dragend", function()
+                    {
+                        if(!google.maps.geometry.poly.containsLocation(overlay.marker.getPosition(), overlay))
+                        {
+                            this.setPosition(this.lastState);
+                            dragEvent(overlay);
+                        }
+                    });
+                    google.maps.event.addListener(overlay.marker , "drag", function()
+                    {
+                        dragEvent(overlay);
+                    });
                 }
             });
             function markerComplete()
@@ -233,23 +251,6 @@ function Map () {
                     showPlaceControl();
                 if(overlays.length == 2 && matchNode == null)
                     drawLine(1, false);
-                                    // Some events for dragging the marker
-                google.maps.event.addListener(overlay.marker , "dragstart", function()
-                {
-                    this.lastState = this.getPosition(); 
-                });
-                google.maps.event.addListener(overlay.marker , "dragend", function()
-                {
-                    if(!google.maps.geometry.poly.containsLocation(overlay.marker.getPosition(), overlay))
-                    {
-                        this.setPosition(this.lastState);
-                        dragEvent(overlay);
-                    }
-                });
-                google.maps.event.addListener(overlay.marker , "drag", function()
-                {
-                    dragEvent(overlay);
-                });
             }
             if(overlay.stops)
             {
@@ -262,7 +263,6 @@ function Map () {
                             overlay.marker = this;
                             markerComplete();
                             this.setIcon(!matchNode? iconPath + overlays.length + ".png" : iconPath + (overlays.length + 1) + ".png");
-                            this.setDraggable(true);
                             this.setMap(map);
                             
                             this.isSelected = true
