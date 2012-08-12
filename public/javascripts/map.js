@@ -216,12 +216,12 @@ function Map () {
                 }
                 // Some events for dragging the marker
                 google.maps.event.addListener(overlay.marker , "dragstart", function(){
-                    overlay.marker.lastState = overlay.marker.getPosition(); 
+                    this.lastState = this.getPosition(); 
                 });
                 google.maps.event.addListener(overlay.marker , "dragend", function(){
                     if(!google.maps.geometry.poly.containsLocation(overlay.marker.getPosition(), overlay))
                     {
-                        overlay.marker.setPosition(overlay.marker.lastState);
+                        this.setPosition(this.lastState);
                         dragEvent(overlay);
                     }
                 });
@@ -333,10 +333,9 @@ function Map () {
 		if(dragMode)
 			lines[index - 1] = line;
 		else
-		{
 			lines.push(line);
-			addLineEvent(line);
-		}
+
+		addLineEvent(line);
 	}
     /*
      * is the drag event for the overlay
@@ -625,10 +624,11 @@ function Map () {
 			addTip(overlay, tip);
 			if(!overlay.selectedBefore)
     			addMatchingEvent(overlay);
+			
 			addMarkerStop(overlay);
 			// change the color of the selected node
-			overlay.isSelected = true
 			overlay.selectedBefore = true;
+			overlay.isSelected = true
 			overlay.setMap(null)
 			
             overlay.strokeColor = "#000000";
@@ -748,6 +748,7 @@ function Map () {
 	// ------------------------------------------- For showing and editting Routes ---------------------
 	/*
 	 * "routeStops" is an array of the sub routes of the route that wanted to show or edit
+	 * "stops" is an array of the stops of the Nodes
 	 */
 	this.showingRoute = function(isEdit)
 	{
@@ -774,6 +775,12 @@ function Map () {
 				map: map		
 			});
 	        poly.name = node.name;
+			poly.marker = new google.maps.Marker({
+			    title: stops[i].stop.name,
+			    position: new google.maps.LatLng(stops[i].stop.lat, stops[i].stop.lon),
+			    icon: iconPath + (i + 1) + ".png",
+			    map: map
+			});
 			
 			addTip(poly, i+1);
 			overlays.push(poly);

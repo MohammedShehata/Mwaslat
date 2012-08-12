@@ -79,20 +79,26 @@ categories = {
               1604 => 'gym' ,
               44795 => 'internet company' }
  
-file = File.open("db/data.txt", "r")
+file = File.open("db/cairo_data.txt", "r")
 counter = 1
 while line = file.gets
   obj = JSON.parse line
   cat = ""
-  obj['tags'].each do |tag|
-    if categories[tag['title']]
-       cat = categories[tag['title']]
+  begin
+    obj['tags'].each do |tag|
+      if tag['title']
+         cat = tag['title']
+         print tag['title'], " "
+      end
     end
+  rescue
+    print "not categorized "
+    cat = ""
   end
-  Node.create(:name => obj['title'], :path => obj['path'], 
+  Node.create!(:name => obj['title'], :path => obj['path'], 
       :center => "#{obj['location']['lon']} , #{obj['location']['lat']}", :category => cat)
   
-  puts "#{counter}"
+  puts "line = #{counter}"
   counter += 1
 end
 file.close

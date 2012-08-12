@@ -151,4 +151,7 @@ class Route < ActiveRecord::Base
       self.stops.insert(self.stops.length, s)
     end
   end
+  def trans_description
+    super().force_encoding('UTF-8')
+  end
 end

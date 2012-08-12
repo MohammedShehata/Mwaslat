@@ -8,11 +8,11 @@
 	<div align="center">
 		<% form_tag do %>
 			<%= hidden_field_tag("next", @next ) %>
-			<%= submit_tag("<") %>
-			<%= submit_tag(">") %>
+			<%= submit_tag("<", :class => "btn") %>
+			<%= submit_tag(">", :class => "btn") %>
 		<% end %>
 	</div>
-	<table border="1" align = "center">
+	<table border="1" align = "center" class="table table-bordered table-striped">
 		<th>ID</th>
 		<th>Title</th>
 		<th>Category</th>
@@ -21,8 +21,8 @@
 				<td><%= node.id %></td>
 				<td><%= node.name %></td>
 				<td><%= node.category %></td>
-				<td><button type="button" onclick="map.showDataNode('<%= node.path %>')">View</button></td>
-				<td><button type="button" onclick="map.showNode('<%= node.name %>', '<%= node.path %>', false)">View</button></td>
+				<td><button type="button" class="btn" onclick="map.showDataNode('<%= node.path %>')">View</button></td>
+				<td><button type="button" class="btn" onclick="map.showNode('<%= node.name %>', '<%= node.path %>', false)">View</button></td>
 			</tr>
 		<% end %>
 	</table>
