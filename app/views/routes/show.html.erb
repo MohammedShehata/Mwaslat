@@ -36,5 +36,6 @@
 		window.routeStops = <%= raw @route.sub_routes.to_json(:include => {
 		:dest => {:only =>[:path, :name]}
 		}, :only => {}) %>
+		window.stops = <%= raw @route.stops.to_json(:only => [:name, :lat, :lon]) %>
 	<% end %>
 </body>

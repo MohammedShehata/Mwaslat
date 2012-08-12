@@ -1,19 +1,23 @@
 require 'geo_ruby'
 
 class Node < ActiveRecord::Base
+  # associations
   belongs_to :user
+  has_many :stops, :dependent => :destroy
   has_many :src_routes, :class_name => "SubRoute", :foreign_key => "src_id"
   has_many :dest_routes, :class_name => "SubRoute", :foreign_key => "dest_id"
   has_many :as_district, :class_name => "Containing", :foreign_key => "poi_id", :dependent => :destroy
   has_many :districts, :through => :as_district
   has_many :as_poi, :class_name => "Containing", :foreign_key => "district_id", :dependent => :destroy
   has_many :pois, :through => :as_poi
+  # validations
   validates :name, :presence => true
   validates :path, :presence => true
   validates :category, :presence => true
-  
-  attr_accessor :node_points
-  
+  # nested attributes
+  # accessors
+  attr_accessor :node_points, :stop_name, :stop_lat, :stop_lon, :stop_id, :stop_data
+
   def out_bounds?(point)
     pol = GeoRuby::SimpleFeatures::Polygon.from_points([@node_points], 4326, false, false)
     point1, point2 = pol.bounding_box

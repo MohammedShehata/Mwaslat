@@ -9,6 +9,7 @@ class RoutesController < ApplicationController
     authorize_route(@route)
     @route.set_sub_routes_durations
     @route.order_sub_routes
+    @route.order_stops
     @route.sub_routes = @route.sub_routes.unshift(SubRoute.new(:dest=> @route.sub_routes[0].src))
   end
   
@@ -25,7 +26,7 @@ class RoutesController < ApplicationController
     @route = Route.new
     2.times do
       sub_route = @route.sub_routes.build
-      sub_route.dest = Node.new
+      sub_route.dest = Node.new()
     end
   end
   
@@ -33,7 +34,8 @@ class RoutesController < ApplicationController
     numOfStops = 0
     children = []
     notified_nodes = []
-    created_districts = []
+    created_districts = []          # nodes added by user during the process of adding a route
+    created_stops = []              # all stops for this route (new and selected ones)
     children_params = params[:route]["sub_routes_attributes"]
     keys = children_params.keys
     keys.collect! {|i| i.to_f}
@@ -54,16 +56,25 @@ class RoutesController < ApplicationController
         child = SubRoute.new
         if(dest_id == "")
           dest = Node.new(dest_params)
+          # check route validity
           if(dest.name == "" || dest.path == "")
             numOfStops = 0
-            puts "here"
             break
           end
           dest.category = "District"
           dest.user = current_user
+          dest_stop = Stop.new(name:dest.stop_name, lon:dest.stop_lon, lat:dest.stop_lat, node:dest)
+          created_stops.push(dest_stop)
           created_districts.push (dest)
         else
           dest = Node.find(dest_id)
+          dest_stop_id = dest_params["stop_id"]
+          if(dest_stop_id == "")
+            dest_stop = Stop.new(name:dest_params["stop_name"], lon:dest_params["stop_lon"], lat:dest_params["stop_lat"], node:dest)
+          else
+            dest_stop = Stop.find(dest_stop_id)
+          end
+          created_stops.push(dest_stop)
           notified_nodes.push(dest) if (dest.user != current_user)
         end
         child.dest = dest
@@ -73,7 +84,7 @@ class RoutesController < ApplicationController
         children.push(child)
       end
     end
-    if(numOfStops < 2)
+    if(numOfStops < 2)                    # prevent saving less than 2 stops
       redirect_to(:back, :notice => "Invalid Stops' Data. Please be sure to either select places from tha map or add a new polygon and provide each with a proper name")
     else
       params[:route].delete("sub_routes_attributes")
@@ -98,6 +109,8 @@ class RoutesController < ApplicationController
       created_districts.each do |district|
         district.setChildren()
       end
+      # create stops and assign them to the route
+      @route.stops = created_stops
       @route.mappings = mappings
       @route.user = current_user
       respond_to do |format|

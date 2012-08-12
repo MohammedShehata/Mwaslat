@@ -17,7 +17,17 @@ var sub_route_element = "<div id='sub_route_index'>" + "<fieldset>" + "<div clas
 "<option value='30 minutes'>30 minutes</option>" + "<option value='40 minutes'>40 minutes</option>" +
 "<option value='50 minutes'>50 minutes</option></select>" + "</div>" + "</div>" + "<p>" + "<fieldset>" + "<div class='control-group'>" +
 "<label class='control-label' for='route_sub_routes_attributes_sub_route_index_dest_attributes_name'>Name</label>" + "<div class='controls'>" +
+
 "<input class='text_field' id='route_sub_routes_attributes_sub_route_index_dest_attributes_name' name='route[sub_routes_attributes][sub_route_index][dest_attributes][name]' size='30' type='text' />" + "</div>" + "</div>" +
+"<div class='control-group'>" +
+"<label class='control-label' for='route_sub_routes_attributes_sub_route_index_dest_attributes_stop_name'>Name</label>"+
+"<div class='controls'>" +
+"<input class='text_field' id='route_sub_routes_attributes_sub_route_index_dest_attributes_stop_name' name='route[sub_routes_attributes][sub_route_index][dest_attributes][stop_name]' size='30' type='text' />" +
+"</div>" +
+"<input id='route_sub_routes_attributes_sub_route_index_dest_attributes_stop_lon' name='route[sub_routes_attributes][sub_route_index][dest_attributes][stop_lon]' type='hidden' />" +
+"<input id='route_sub_routes_attributes_sub_route_index_dest_attributes_stop_lat' name='route[sub_routes_attributes][sub_route_index][dest_attributes][stop_lat]' type='hidden' />" +
+"<input id='route_sub_routes_attributes_sub_route_index_dest_attributes_stop_id' name='route[sub_routes_attributes][sub_route_index][dest_attributes][stop_id]' type='hidden' />" +
+"</div>" +
 "<input id='route_sub_routes_attributes_sub_route_index_dest_attributes_path' name='route[sub_routes_attributes][sub_route_index][dest_attributes][path]' type='hidden' />" +
 "<input id='route_sub_routes_attributes_sub_route_index_dest_attributes_id' name='route[sub_routes_attributes][sub_route_index][dest_attributes][id]' type='hidden' />" +
 "</fieldset>" + "</p>" + "<input id='route_sub_routes_attributes_sub_route_index__destroy' name='route[sub_routes_attributes][sub_route_index][_destroy]' type='hidden' value='false' />" +
@@ -282,11 +292,24 @@ function add_selected_node(name, path, id, sub_route_index, isFirst) {
 	$(node_id_template + "name").attr("disabled", "disabled");
 }
 
+function add_selected_stop(name, lat, lon, id, sub_route_index) {
+	var node_id_template = "#" + template_2.replace(to_replace, sub_routes_ids[sub_route_index]).replace(".", "\\.");
+	$(node_id_template + "stop_name").val(name);
+	$(node_id_template + "stop_lat").val(lat);
+	$(node_id_template + "stop_lon").val(lon);
+	$(node_id_template + "stop_id").val(id);
+	$(node_id_template + "stop_name").attr("disabled", "disabled");
+}
+
 function fillPaths() {
 	var overlays = map.getOverlays();
 	for(var i = 0; i < sub_routes_ids.length; i++) {
 		var hidden_path_id = "#" + template_2.replace(to_replace, sub_routes_ids[i]).replace(".", "\\.") + "path";
+		var hidden_stop_lat_id = "#" + template_2.replace(to_replace, sub_routes_ids[i]).replace(".", "\\.") + "stop_lat";
+		var hidden_stop_lon_id = "#" + template_2.replace(to_replace, sub_routes_ids[i]).replace(".", "\\.") + "stop_lon";
 		$(hidden_path_id).val(overlays[i].getPointString());
+		$(hidden_stop_lat_id).val(overlays[i].marker.getPosition().lat());
+		$(hidden_stop_lon_id).val(overlays[i].marker.getPosition().lng());
 	}
 }
 

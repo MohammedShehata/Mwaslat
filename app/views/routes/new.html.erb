@@ -15,7 +15,7 @@
 			<%= form_for @route , :html => { :class => 'well form-horizontal' } do |f_route| %>
 			<div id="sub_routes">
 				<%= f_route.fields_for :sub_routes , :html => { :class => 'form-horizontal' } do |f_sub_routes|%>
-				<%= render "sub_route_fields", :f => f_sub_routes %>
+					<%= render "sub_route_fields", :f => f_sub_routes %>
 				<%end%>
 				<br/>
 			</div>
@@ -52,5 +52,5 @@
 	</div>
 </body>
 <%= javascript_tag do %>
-	window.nodes = <%= raw Node.search(:category_eq => "District").all.to_json(:only => [:name, :path, :id] ) %>;
+	window.nodes = <%= raw Node.search(:category_eq => "District").all.to_json(:include => {:stops => {:only =>[:id, :name, :lat, :lon]}},:only => [:name, :path, :id] ) %>;
 <% end %>

@@ -1,5 +1,7 @@
 class Route < ActiveRecord::Base
   belongs_to :user
+  has_many :stoppings, :dependent => :destroy
+  has_many :stops, :through => :stoppings
   has_many :mappings, :dependent => :destroy
   has_many :sub_routes, :through => :mappings
   has_many :likes, :dependent => :destroy
@@ -123,5 +125,30 @@ class Route < ActiveRecord::Base
       end
     end
     return nil
+  end
+  
+  def stop_of(node)
+    self.stops.each do |stop|
+      if(stop.node == node)
+        return stop
+      end
+    end
+    return nil
+  end
+  
+  def ordered_stops
+    order_sub_routes
+    new_stops = []
+    self.nodes.each do |node|
+      new_stops.push(stop_of(node))
+    end
+    new_stops
+  end
+  def order_stops
+    new_stops = ordered_stops
+    self.stops.pop(self.stops.length)
+    new_stops.each do |s|
+      self.stops.insert(self.stops.length, s)
+    end
   end
 end

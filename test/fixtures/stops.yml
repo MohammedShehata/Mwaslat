@@ -1,0 +1,13 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+
+one:
+  name: MyString
+  lon: 1.5
+  lat: 1.5
+  node: 
+
+two:
+  name: MyString
+  lon: 1.5
+  lat: 1.5
+  node: 
