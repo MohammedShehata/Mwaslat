@@ -1090,7 +1090,8 @@ function Map () {
     } 
 	// ------------------------------------------ For searching --------------------
     // var "searchNodes" is ajson object of a 2d array of subroutes
-    // var "searchFlags" is an array of what is the real stops  
+    // var "searchFlags" is an array of what is the real stops
+    // var "stops" is ajson object of a 2d array of the stops of the nodes  
     // @param(row) is the index of the required showing route 
     this.showRoute = function(row)
     {
@@ -1104,7 +1105,7 @@ function Map () {
         var bounds = new google.maps.LatLngBounds();
         var path = google.maps.geometry.encoding.decodePath(searchNodes[row][0].sub_route.src.path);
         var name = searchNodes[row][0].sub_route.src.name
-        overlays.push(addPolygon(path, name)); 
+        overlays.push(addPolygon(path, name, stops[row][0].stop.lon, stops[row][0].stop.lat, stops[row][0].stop.name)); 
         fitBounds(bounds, path);
         addTip(overlays[0], 1)
         addTitle(overlays[0]);
@@ -1114,7 +1115,7 @@ function Map () {
         {
             var path = google.maps.geometry.encoding.decodePath(searchNodes[row][i].sub_route.dest.path);
             var name = searchNodes[row][i].sub_route.dest.name
-            overlays.push(addPolygon(path, name));
+            overlays.push(addPolygon(path, name, stops[row][i + 1].stop.lon, stops[row][i + 1].stop.lat, stops[row][i + 1].stop.name));
             fitBounds(bounds, path);
             drawLine(i+1, true);  // here i set drag_mode to prevent from adding line event
             addTitle(overlays[i + 1]);
@@ -1132,7 +1133,7 @@ function Map () {
         for(var i = 0; i < path.length; i ++)
             bounds.extend(path[i]);
     }
-    function addPolygon(path, name)
+    function addPolygon(path, name, markerLng, markerLat, markerName)
     {
         var poly = new google.maps.Polygon({
             path: path,
@@ -1142,6 +1143,13 @@ function Map () {
         });
         poly.setMap(map);
         poly.name = name
+        poly.marker = new google.maps.Marker({
+            title: markerName,
+            position: new google.maps.LatLng(markerLat, markerLng),
+            // icon: iconPath + (i + 1) + ".png",
+            icon: blankIcon,
+            map: map
+        });
         return poly;
     }
 	/*this.showMapRoutes = function ()

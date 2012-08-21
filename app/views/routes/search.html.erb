@@ -36,13 +36,16 @@
  					ids = 0
 				%>
 				<%= javascript_tag do %>
-				window.searchFlags = <%= flags %>
-				window.searchNodes = <%= raw @routes.to_json(
-          :include => {
-          :src => {:only => [:path, :name]} ,
-          :dest => {:only => [:path, :name]}
-          },
-          :only=>{} ) %>;
+					window.searchFlags = <%= flags %>
+					
+					window.searchNodes = <%= raw @routes.to_json(
+			          :include => {
+				          :src => {:only => [:path, :name]} ,
+				          :dest => {:only => [:path, :name]}
+			          },
+			          :only=>{} ) %>;
+				  
+				  	window.stops = <%= raw @stops.to_json(:only => [:name, :lat, :lon]) %>;
 				<% end %>
 				<% @routes.each do|sub_routes| %>
 				<table class="table table-striped" >
@@ -102,6 +105,6 @@
 	</div>
 	<br />
 	<%= javascript_tag do %>
-		window.nodes = <%= raw Node.all.to_json(:only => [:name, :path, :id] ) %>;
+		window.nodes = <%= raw Node.search(:category_eq => "District").all.to_json(:include => {:stops => {:only =>[:id, :name, :lat, :lon]}},:only => [:name, :path, :id] ) %>;
 	<% end %>
 </body>

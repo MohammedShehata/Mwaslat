@@ -360,7 +360,20 @@ class RoutesController < ApplicationController
       routes = search.searches(@src, @dest)
       comp = Compinations.new
       @routes = comp.get_comp routes, @src
-
+      
+      @stops = []
+      parents = @routes[-2]
+      for i in 0..@routes.length-3 do
+        sub_routes = @routes[i]
+        s = []
+        for j in 0...sub_routes.length do
+          s.push(parents[i][j].stop_of(sub_routes[j].src))
+        end
+        s.push(parents[i][j].stop_of(sub_routes.last.dest))
+        @stops.push s
+      end
+      puts "==========================\n #{@stops} ===================================\n "
+      
       respond_to do |format|
           format.html
           if params[:key] == "1234"
