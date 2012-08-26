@@ -360,27 +360,54 @@ class RoutesController < ApplicationController
       routes = search.searches(@src, @dest)
       comp = Compinations.new
       @routes = comp.get_comp routes, @src
-      
+      @flags = @routes.pop
+      @parents = @routes.pop
       @stops = []
-      parents = @routes[-2]
-      for i in 0..@routes.length-3 do
+      for i in 0...@routes.length do
         sub_routes = @routes[i]
         s = []
         for j in 0...sub_routes.length do
-          s.push(parents[i][j].stop_of(sub_routes[j].src))
+          s.push(@parents[i][j].stop_of(sub_routes[j].src))
         end
-        s.push(parents[i][j].stop_of(sub_routes.last.dest))
+        s.push(@parents[i][j].stop_of(sub_routes.last.dest))
         @stops.push s
       end
       puts "==========================\n #{@stops} ===================================\n "
       
       respond_to do |format|
           format.html
-          if params[:key] == "1234"
-            format.xml       # search.xml
-          end
+          format.json{ render :json => {:sub_routes => @routes.to_json(
+                :include => {
+                  :src => {:only => [:path, :name]} ,
+                  :dest => {:only => [:path, :name]}
+                },
+                :only=>{}), :flags =>  @flags.to_json(),
+                 :stops => @stops.to_json(:only => [:name, :lat, :lon]),:parents => as_json(@parents, @routes)}}
+                 # :stops => @stops.to_json(:only => [:name, :lat, :lon]), :parents => @parents.to_json(:only => [:cost, :trans_category])}}
+          
+          format.xml       # search.xml
       end
     end
+  end
+  
+  def as_json parents, sub_routes
+    # parents.to_json()
+    str = "["
+    for i in 0...parents.length
+      str += "["
+      for j in 0...parents[i].length
+        str += "{\"route\":{"
+        str += "\"cost\":" + parents[i][j].cost.to_s
+        str += ",\"trans_category\":" + parents[i][j].trans_category.to_json
+        #str += ",\"trans_description\":" + parents[i][j].trans_description.to_json
+        str += ",\"duration\":" + parents[i][j].getMapping(sub_routes[i][j].id).duration.to_s
+        str += "}},"
+      end
+      str[str.length - 1] = ""
+      str += "],"
+    end
+    str[str.length - 1] = "" 
+    str += "]"
   end
   
   def get_poi_destricts arr

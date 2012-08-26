@@ -31,12 +31,10 @@
 				<%
 				 if(@routes != nil) 
 				 	row = -1
- 					flags = @routes.pop
- 					parents = @routes.pop
  					ids = 0
 				%>
 				<%= javascript_tag do %>
-					window.searchFlags = <%= flags %>
+					window.searchFlags = <%= @flags %>
 					
 					window.searchNodes = <%= raw @routes.to_json(
 			          :include => {
@@ -62,22 +60,22 @@
 						<%
 						i = 0
 						while i < sub_routes.length
-							cost = parents[row + 1][i].cost
-							trans = parents[row + 1][i].trans_category
-							time = parents[row + 1][i].getMapping(sub_routes[i].id).duration
+							cost = @parents[row + 1][i].cost
+							trans = @parents[row + 1][i].trans_category
+							time = @parents[row + 1][i].getMapping(sub_routes[i].id).duration
 	
-							if flags[row + 1][i][0]
+							if @flags[row + 1][i][0]
 								src = sub_routes[i].src.name
 							else
 								src = sub_routes[i - 1].dest.name
 							end
 	
-							while !flags[row + 1][i][1]
+							while !@flags[row + 1][i][1]
 								i += 1
-								time += parents[row + 1][i].getMapping(sub_routes[i].id).duration
+								time += @parents[row + 1][i].getMapping(sub_routes[i].id).duration
 							end
 							dest = sub_routes[i].dest.name
-							@route = parents[row + 1][i]
+							@route = @parents[row + 1][i]
 							i += 1
 						%>
 						<tr>
